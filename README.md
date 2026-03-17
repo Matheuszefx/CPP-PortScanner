@@ -29,7 +29,7 @@ You will be prompted to enter:
 ## Example
 
 ```
-----------MUNHOZ SCANNER----------
+-------Matheuszefx Scanner-------
 Enter target IP:
 192.168.1.1
 Enter scan interval (seconds):
