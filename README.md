@@ -1,5 +1,5 @@
 # CPP-PortScanner
-# 🔍 Port Scanner
+#  Port Scanner
 
 A simple TCP port scanner written in C++ using BSD sockets.
 
