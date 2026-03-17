@@ -25,13 +25,13 @@ std::string getServiceName(int port) {
 
 if (serviceMap.count(port))
 	return serviceMap[port];
-	return "DESCONHECIDO";
+	return "Unknown";
 
 };
 
 int main(){
 
-	std::cout << "----------MUNHOZ SCANNER----------" << '\n';
+	std::cout << "-------Maatheuszefx Scanner-------" << '\n';
 	std::string ip;
 	std::cout << "Enter target IP:" << '\n';
 	std::cin >> ip;
