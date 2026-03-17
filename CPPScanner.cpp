@@ -31,7 +31,7 @@ if (serviceMap.count(port))
 
 int main(){
 
-	std::cout << "-------Maatheuszefx Scanner-------" << '\n';
+	std::cout << "-------Matheuszefx Scanner-------" << '\n';
 	std::string ip;
 	std::cout << "Enter target IP:" << '\n';
 	std::cin >> ip;
