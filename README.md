@@ -12,13 +12,13 @@ A simple TCP port scanner written in C++ using BSD sockets.
 ## How to Compile
 
 ```bash
-g++ newc.cpp -o scanner
+g++ CPPScanner.cpp -o CPPScanner
 ```
 
 ## How to Use
 
 ```bash
-./scanner
+./CPPScanner
 ```
 
 You will be prompted to enter:
