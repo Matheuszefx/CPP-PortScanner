@@ -54,7 +54,7 @@ int main(){
 
 	
 	if(result == 0) {
-		std::cout << "Porta aberta: " << port << " " <<  getServiceName(port) << '\n';
+		std::cout << "Open port: " << port << " " <<  getServiceName(port) << '\n';
 	}
 
 	close(sock);
