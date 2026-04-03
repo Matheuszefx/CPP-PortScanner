@@ -8,8 +8,8 @@ Scanner de rede em C++ no estilo "mini nmap", mas orientado a inventario defensi
 - Varre um host ou faixa CIDR IPv4
 - Usa pool de threads, rate limiting e retry configuravel
 - Lista portas abertas por host
-- Tenta capturar banners simples de servicos TCP
-- Faz reverse DNS dos hosts ativos
+- Tenta capturar banners simples de servicos TCP sem bloquear por timeout cheio em cada porta aberta
+- Opcionalmente faz reverse DNS dos hosts ativos
 - Exporta em formato legivel, JSON, JSONL ou CSV
 - Oferece perfis de portas prontos: `common`, `web`, `infra`, `windows`, `database`
 
@@ -41,8 +41,8 @@ cmake --build build
 .\net_inventory_scanner.exe --target 192.168.0.0/24
 .\net_inventory_scanner.exe --target 192.168.0.0/24 --profile web --format json
 .\net_inventory_scanner.exe --target 10.0.0.15 --ports 22,80,443,8080 --retries 2 --rate-limit 100
-.\net_inventory_scanner.exe --target 127.0.0.1 --profile database --no-dns --csv
-.\net_inventory_scanner.exe --target 192.168.1.0/24 --verbose --no-banners
+.\net_inventory_scanner.exe --target 127.0.0.1 --profile database --csv
+.\net_inventory_scanner.exe --target 192.168.1.0/24 --verbose --dns --no-banners
 ```
 
 ## Parametros principais
@@ -57,7 +57,8 @@ cmake --build build
 - `--format`: `human`, `json`, `jsonl` ou `csv`
 - `--verbose`: logs de progresso no `stderr`
 - `--no-discovery`: pula a etapa de host discovery
-- `--no-dns`: desliga reverse DNS
+- `--dns`: ativa reverse DNS
+- `--no-dns`: desliga reverse DNS explicitamente
 - `--no-banners`: desliga captura de banner
 
 ## Exemplo de saida humana

@@ -48,6 +48,7 @@ constexpr std::uint32_t kPrivate172Base = 0xAC100000U;
 constexpr std::uint32_t kPrivate192Base = 0xC0A80000U;
 constexpr std::size_t kMaxHosts = 4096;
 constexpr std::size_t kMaxBannerLength = 120;
+constexpr int kBannerWaitMs = 150;
 
 enum class OutputFormat {
     human,
@@ -65,7 +66,7 @@ struct Options {
     int rateLimitPerSecond = 200;
     bool verbose = false;
     bool discovery = true;
-    bool resolveDns = true;
+    bool resolveDns = false;
     bool banners = true;
     OutputFormat outputFormat = OutputFormat::human;
 };
@@ -502,7 +503,7 @@ void printUsage() {
         << "  net_inventory_scanner --target 192.168.0.0/24 [--ports 22,80,443]\n"
         << "                       [--profile web,windows] [--timeout-ms 400] [--threads 128]\n"
         << "                       [--retries 1] [--rate-limit 200] [--format human|json|jsonl|csv]\n"
-        << "                       [--verbose] [--no-discovery] [--no-dns] [--no-banners]\n\n"
+        << "                       [--verbose] [--no-discovery] [--dns] [--no-dns] [--no-banners]\n\n"
         << "Perfis disponiveis:\n"
         << "  common, web, infra, windows, database\n\n"
         << "Observacoes:\n"
@@ -563,6 +564,8 @@ Options parseArgs(int argc, char** argv) {
             options.verbose = true;
         } else if (arg == "--no-discovery") {
             options.discovery = false;
+        } else if (arg == "--dns") {
+            options.resolveDns = true;
         } else if (arg == "--no-dns") {
             options.resolveDns = false;
         } else if (arg == "--no-banners") {
@@ -697,7 +700,24 @@ bool looksTlsPort(std::uint16_t port) {
     return port == 443 || port == 8443 || port == 9443 || port == 993 || port == 995;
 }
 
-std::string receiveChunk(SocketHandle handle) {
+bool waitForReadable(SocketHandle handle, int timeoutMs) {
+    fd_set readSet;
+    FD_ZERO(&readSet);
+    FD_SET(handle, &readSet);
+
+    timeval timeout {};
+    timeout.tv_sec = timeoutMs / 1000;
+    timeout.tv_usec = (timeoutMs % 1000) * 1000;
+
+    const int ready = select(static_cast<int>(handle + 1), &readSet, nullptr, nullptr, &timeout);
+    return ready > 0 && FD_ISSET(handle, &readSet);
+}
+
+std::string receiveChunk(SocketHandle handle, int waitMs) {
+    if (!waitForReadable(handle, waitMs)) {
+        return "";
+    }
+
     char buffer[512] {};
     const int received = recv(handle, buffer, sizeof(buffer), 0);
     if (received <= 0) {
@@ -707,26 +727,22 @@ std::string receiveChunk(SocketHandle handle) {
 }
 
 std::string captureBanner(SocketHandle handle, std::uint32_t ip, std::uint16_t port) {
-    std::string banner = sanitizeBanner(receiveChunk(handle));
-    if (!banner.empty()) {
-        return banner;
+    if (looksTlsPort(port)) {
+        return "tls-service-open";
     }
 
     if (looksHttpPort(port)) {
         const std::string request =
             "HEAD / HTTP/1.0\r\nHost: " + ipv4ToString(ip) + "\r\nUser-Agent: net_inventory_scanner\r\nConnection: close\r\n\r\n";
         send(handle, request.c_str(), static_cast<int>(request.size()), 0);
-        banner = sanitizeBanner(receiveChunk(handle));
+        const std::string banner = sanitizeBanner(receiveChunk(handle, kBannerWaitMs));
         if (!banner.empty()) {
             return banner;
         }
+        return "";
     }
 
-    if (looksTlsPort(port)) {
-        return "tls-service-open";
-    }
-
-    return "";
+    return sanitizeBanner(receiveChunk(handle, kBannerWaitMs));
 }
 
 std::string resolveHostname(std::uint32_t ip) {
